@@ -59,7 +59,7 @@ Analyze sales data to track revenue performance against targets, identify top cu
 |-------|--------|-------------|
 | 🥉 **Bronze** | `orders`, `users`, `items`, `targets` | Raw Excel data with audit columns |
 | 🥈 **Silver** | `orders`, `users`, `items` | Cleaned, validated, merged data |
-| 🥇 **Gold** | `fact_orders`, `dim_users`, `dim_items` | Star schema for analytics |
+| 🥇 **Gold** | `fact_orders`, `dim_users`, `dim_items` | Star schema for analytics (fact table with incremental upsert) |
 
 ---
 
