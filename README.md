@@ -87,13 +87,12 @@ Analyze ABInBev sales data to:
 ```
 Challenge/
 ├── README.md                         # This documentation
-├── .env                              # Credentials (do not commit)
-├── .env.example                      # Configuration template
 ├── .gitignore                        # Files to ignore
+├── case_abinbev.pbix                 # Power BI Dashboard
 └── notebooks/                        # Databricks notebooks (executed in Databricks)
-    ├── 01_bronze_ingestion.py        # Creates bronze_raw_* tables
-    ├── 02_silver_transformation.py   # Creates silver_* tables
-    ├── 03_gold_modeling.py           # Creates fact_orders, dim_users, dim_items
+    ├── 01_bronze_ingestion.py        # Creates abinbev.bronze.* tables
+    ├── 02_silver_transformation.py   # Creates abinbev.silver.* tables
+    ├── 03_gold_modeling.py           # Creates abinbev.gold.fact_orders, dim_users, dim_items
     └── 04_data_quality_validation.py # Validates Gold layer integrity
 ```
 
@@ -132,17 +131,14 @@ If you want to test the solution:
    - Execute notebooks in order (01 → 02 → 03 → 04)
 
 2. **Connect Power BI:**
-   - Copy `.env.example` to `.env`
-   - Add your Databricks credentials:
-     ```env
-     DATABRICKS_HOST=your-workspace.cloud.databricks.com
-     DATABRICKS_HTTP_PATH=/sql/1.0/warehouses/your-warehouse-id
-     DATABRICKS_TOKEN=your-token-here
-     ```
    - Open Power BI Desktop
    - Get Data → Databricks connector
-   - Import tables: `fact_orders`, `dim_users`, `dim_items`
-   - Load the calendar dimension using `dim_calendar.pq`
+   - Use your Databricks credentials:
+     - Server: `community.cloud.databricks.com`
+     - HTTP path: `/sql/1.0/warehouses/[your-warehouse-id]`
+     - Authentication: Personal Access Token
+   - Import tables: `abinbev.gold.fact_orders`, `abinbev.gold.dim_users`, `abinbev.gold.dim_items`
+   - Create the calendar dimension in Power BI using Power Query M
 
 3. **Explore Dashboard:**
    - Review sales metrics vs targets
@@ -161,20 +157,26 @@ If you want to test the solution:
 4. Execute in order:
 
 ```
-1. 01_bronze_ingestion.py        → Creates bronze_raw_* tables
-2. 02_silver_transformation.py   → Creates silver_* tables  
-3. 03_gold_modeling.py           → Creates fact_orders, dim_users, dim_items
+1. 01_bronze_ingestion.py        → Creates abinbev.bronze.* tables (orders, users, items, targets)
+2. 02_silver_transformation.py   → Creates abinbev.silver.* tables (orders, users, items)
+3. 03_gold_modeling.py           → Creates abinbev.gold.* tables (fact_orders, dim_users, dim_items)
 4. 04_data_quality_validation.py → Validates data quality (optional)
 ```
 
 #### Expected Output
 
-After running all notebooks, you'll have these tables in `abinbev.default` catalog:
+After running all notebooks, you'll have these tables in Databricks:
+
+**Bronze Layer**:
+- `abinbev.bronze.orders`, `abinbev.bronze.users`, `abinbev.bronze.items`, `abinbev.bronze.targets`
+
+**Silver Layer**:
+- `abinbev.silver.orders`, `abinbev.silver.users`, `abinbev.silver.items`
 
 **Gold Layer (ready for Power BI)**:
-- ✅ `fact_orders` - Transactional sales data
-- ✅ `dim_users` - Customer dimension with targets
-- ✅ `dim_items` - Product dimension
+- ✅ `abinbev.gold.fact_orders` - Transactional sales data
+- ✅ `abinbev.gold.dim_users` - Customer dimension with targets
+- ✅ `abinbev.gold.dim_items` - Product dimension
 
 ### 4️⃣ Consume in Power BI
 
@@ -187,11 +189,11 @@ Power BI Desktop
 → Server hostname: community.cloud.databricks.com
 → HTTP path: /sql/1.0/warehouses/[your-warehouse-id]
 → Authentication: Personal Access Token
-→ Paste your token from .env file
+→ Paste your Personal Access Token
 → Select tables:
-   - abinbev.default.fact_orders
-   - abinbev.default.dim_users
-   - abinbev.default.dim_items
+   - abinbev.gold.fact_orders
+   - abinbev.gold.dim_users
+   - abinbev.gold.dim_items
 → Data Connectivity Mode: Import
 → Load
 ```
