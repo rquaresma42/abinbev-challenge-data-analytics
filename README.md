@@ -1,21 +1,26 @@
 # 🍺 ABInBev | BEES - Data Engineering Challenge
 
-**Candidate**: Rafael  
-**Delivery Date**: December 2025  
-**Challenge**: Sales Analytics Pipeline + Dashboard
+[![Databricks](https://img.shields.io/badge/Databricks-Medallion_Architecture-FF3621?style=flat&logo=databricks)](https://databricks.com/)
+[![PySpark](https://img.shields.io/badge/PySpark-Data_Processing-E25A1C?style=flat&logo=apache-spark)](https://spark.apache.org/)
+[![Power BI](https://img.shields.io/badge/Power_BI-Dashboard-F2C811?style=flat&logo=powerbi)](https://powerbi.microsoft.com/)
+[![Delta Lake](https://img.shields.io/badge/Delta_Lake-Storage-00ADD8?style=flat)](https://delta.io/)
+
+> **Data Engineering Challenge**: End-to-end sales analytics pipeline implementing Medallion Architecture (Bronze → Silver → Gold) with Databricks and Power BI visualization.
+
+**Delivery Date**: December 2025
 
 ---
 
 ## 📋 Executive Summary
 
-This solution implements a complete **end-to-end data pipeline** for ABInBev sales analysis, using:
+This solution implements a complete **end-to-end data pipeline** for ABInBev | BEES sales analysis, using:
 
 - **Databricks** (Medallion Architecture: Bronze → Silver → Gold)
 - **PySpark** (data transformation and modeling)
-- **Delta Lake** (storage format)
+- **Delta Lake** (ACID-compliant storage format)
 - **Power BI** (interactive dashboard)
 
-### ✅ Deliverables
+### ✅ Project Deliverables
 
 1. **4 Databricks notebooks** implementing the data pipeline
 2. **Star Schema** with 1 fact table and 2 dimension tables
@@ -24,13 +29,13 @@ This solution implements a complete **end-to-end data pipeline** for ABInBev sal
 
 ---
 
-## 🎯 Business Problem Solved
+## 🎯 Business Problem
 
-Analyze ABInBev sales data to:
+The solution analyzes ABInBev | BEES sales data to:
 - Track revenue performance against customer targets
 - Identify top-performing customers and products
 - Visualize trends by city, customer category, and product type
-- Support data-driven decision making
+- Support data-driven decision making through interactive dashboards
 
 ---
 
@@ -48,30 +53,6 @@ Analyze ABInBev sales data to:
 🥇 GOLD Layer - Dimensional model
     ↓ [Databricks Connector]
 📊 Power BI Dashboard
-```
-
-### Key Technical Decisions
-
-| Decision | Rationale |
-|----------|-----------|
-| **Databricks Community Edition** | Cost-effective cloud platform for processing |
-| **Delta Lake format** | ACID transactions, time travel, schema evolution |
-| **Star Schema** | Optimized for analytics queries and BI tools |
-| **Merged users + targets** | Single source of truth for customer data |
-| **Calendar in Power BI** | Flexibility for date hierarchies without SQL Warehouse |
-
-### Data Model (Star Schema)
-
-```
-       dim_users (8 customers)
-           |
-           | (user_id)
-           |
-     fact_orders (100+ transactions)
-           |
-           | (product_id)
-           |
-       dim_items (10 products)
 ```
 
 **Gold Layer Output:**
@@ -96,128 +77,67 @@ Challenge/
     └── 04_data_quality_validation.py # Validates Gold layer integrity
 ```
 
-**Note**: The `notebooks/` folder contains PySpark code that must be executed in **Databricks workspace**. These notebooks generate the dimensional model (fact and dimension tables) consumed by Power BI.
+---
+
+## 🔧 Implementation Details
+
+### Data Pipeline Notebooks
+
+Four PySpark notebooks were developed and executed in Databricks:
+
+1. **01_bronze_ingestion.py** - Ingests raw Excel files into Delta tables with audit columns
+2. **02_silver_transformation.py** - Cleans data, validates business rules, and merges users with targets
+3. **03_gold_modeling.py** - Creates star schema with fact and dimension tables
+4. **04_data_quality_validation.py** - Validates referential integrity and data quality
+
+### Pipeline Results
+
+| Layer | Tables Created | Records |
+|-------|----------------|----------|
+| 🥉 **Bronze** | `orders`, `users`, `items`, `targets` | Raw data as-is |
+| 🥈 **Silver** | `orders`, `users`, `items` | Cleaned & validated |
+| 🥇 **Gold** | `fact_orders`, `dim_users`, `dim_items` | Star schema ready |
 
 ---
 
-## 🔍 For Reviewers: How to Validate This Solution
+## 📊 Power BI Dashboard
 
-### Option 1: Review Code & Documentation (Recommended)
+### Dashboard Structure
 
-**What to check:**
-1. **Notebooks** (`/notebooks/`) - Well-documented PySpark code with clear transformations
-2. **This README** - Complete architecture and decision documentation
-3. **Data model** - Star Schema design rationale
-4. **Power BI** - Dashboard file (.pbix) with insights
+The dashboard is organized into the following sections:
 
-**No setup needed** - Just review the code quality and approach.
+#### 🎯 Key Metrics (Top Cards)
+- **Total Revenue** - Aggregated sales from all transactions
+- **Revenue Achievement** - Performance percentage against targets
+- **Average Ticket** - Average revenue per order
 
----
+#### 📈 Revenue Over Time (Central Area)
+- **Area Chart** with dual series (YTD Revenue vs. Monthly Revenue)
+- **Time Axis** showing monthly progression
+- **Toggle Buttons** to switch between Monthly Revenue and YTD Revenue views
+- **Data Labels** displaying values at key points
 
-### Option 2: Reproduce the Pipeline (Optional)
+#### 🏪 User Category Analysis (Right Panel - Top)
+- **Horizontal Bar Chart** comparing Total Revenue vs. Total Target
+- **Categories**: Bar, Restaurant, Shop
+- **Dual-color bars** (blue for revenue, green for target)
 
-If you want to test the solution:
+#### 🌆 User City Analysis (Right Panel - Bottom)
+- **Horizontal Bar Chart** showing performance by geographic location
+- **Cities**: Campinas, Rio de Janeiro, São Paulo
+- **Target vs. Actual comparison** with overlaid bars
 
-#### Prerequisites
-
-- Databricks Community Edition account (free)
-- Power BI Desktop
-
-#### Steps
-
-1. **Setup Databricks:**
-   - Upload source Excel files (orders, users, items, targets)
-   - Import the 4 notebooks from `/notebooks/` folder
-   - Execute notebooks in order (01 → 02 → 03 → 04)
-
-2. **Connect Power BI:**
-   - Open Power BI Desktop
-   - Get Data → Databricks connector
-   - Use your Databricks credentials:
-     - Server: `community.cloud.databricks.com`
-     - HTTP path: `/sql/1.0/warehouses/[your-warehouse-id]`
-     - Authentication: Personal Access Token
-   - Import tables: `abinbev.gold.fact_orders`, `abinbev.gold.dim_users`, `abinbev.gold.dim_items`
-   - Create the calendar dimension in Power BI using Power Query M
-
-3. **Explore Dashboard:**
-   - Review sales metrics vs targets
-   - Analyze customer and product performance
-   - Check data quality validations
-
-### 3️⃣ Run Databricks Pipeline
-
-**Important**: These notebooks must be executed **inside Databricks workspace** to create the Gold layer tables.
-
-#### Upload Notebooks to Databricks
-
-1. Go to **Workspace** in Databricks
-2. Navigate to `abinbev` folder
-3. Import the 4 notebooks from `Challenge/notebooks/`
-4. Execute in order:
-
-```
-1. 01_bronze_ingestion.py        → Creates abinbev.bronze.* tables (orders, users, items, targets)
-2. 02_silver_transformation.py   → Creates abinbev.silver.* tables (orders, users, items)
-3. 03_gold_modeling.py           → Creates abinbev.gold.* tables (fact_orders, dim_users, dim_items)
-4. 04_data_quality_validation.py → Validates data quality (optional)
-```
-
-#### Expected Output
-
-After running all notebooks, you'll have these tables in Databricks:
-
-**Bronze Layer**:
-- `abinbev.bronze.orders`, `abinbev.bronze.users`, `abinbev.bronze.items`, `abinbev.bronze.targets`
-
-**Silver Layer**:
-- `abinbev.silver.orders`, `abinbev.silver.users`, `abinbev.silver.items`
-
-**Gold Layer (ready for Power BI)**:
-- ✅ `abinbev.gold.fact_orders` - Transactional sales data
-- ✅ `abinbev.gold.dim_users` - Customer dimension with targets
-- ✅ `abinbev.gold.dim_items` - Product dimension
-
-### 4️⃣ Consume in Power BI
-
-#### Using Databricks Connector (Import Mode) ✅
-
-```
-Power BI Desktop
-→ Get Data → More → Search "Databricks"
-→ Select "Databricks" (not Azure Databricks)
-→ Server hostname: community.cloud.databricks.com
-→ HTTP path: /sql/1.0/warehouses/[your-warehouse-id]
-→ Authentication: Personal Access Token
-→ Paste your Personal Access Token
-→ Select tables:
-   - abinbev.gold.fact_orders
-   - abinbev.gold.dim_users
-   - abinbev.gold.dim_items
-→ Data Connectivity Mode: Import
-→ Load
-```
-
-**Note**: This method connects directly to Databricks tables using your Personal Access Token for authentication.
-
-### 5️⃣ Create Calendar Dimension & Configure Relationships
-
-#### Create Calendar Table in Power BI
-
-Use the provided `dim_calendar.pq` file or create using DAX/Power Query with the following columns:
-- date, year, month, quarter, week_of_year, day_of_week, month_name, day_name, year_month, year_week
-
-#### Configure Relationships in Model View
-
-```
-fact_orders[user_id]     → dim_users[user_id]      (N:1, Single)
-fact_orders[product_id]  → dim_items[item_id]      (N:1, Single)
-fact_orders[order_date]  → dim_calendar[date]      (N:1, Single)
-```
+### Dashboard Features
+- ✅ **Interactive visuals** with cross-filtering capabilities
+- ✅ **Target vs. Actual comparison** across all dimensions
+- ✅ **Time-based navigation** for trend analysis
+- ✅ **Geographic and categorical segmentation**
 
 ---
 
-## 📊 Data Model
+## 📊 Data Model (Star Schema)
+
+The solution implements a star schema optimized for analytical queries:
 
 ### Fact Table: `fact_orders`
 
@@ -264,92 +184,52 @@ fact_orders[order_date]  → dim_calendar[date]      (N:1, Single)
 | year_month | String | YYYY/MM |
 | year_week | String | YYYY/WW |
 
----
+### Relationships Implemented
 
-## 💡 Key Insights & Results
-
-### Business Metrics Implemented
-
-| Metric | Description | Power BI Implementation |
-|--------|-------------|------------------------|
-| **Total Revenue** | Sum of all orders | `SUM(fact_orders[revenue])` |
-| **Achievement %** | Revenue vs annual targets | `DIVIDE([Revenue], [Target] * 12)` |
-| **Avg Ticket** | Revenue per order | `DIVIDE([Revenue], COUNT(orders))` |
-| **Customer Ranking** | Top performers | Table with revenue + target |
-| **Product Mix** | Revenue by category | Bar chart (beer/nab/soda) |
-| **Geographic Analysis** | Revenue by city | Map visual |
-
-### Expected Insights (Based on Data)
-
-- **Customer Performance**: 8 customers across 3 categories (bar, restaurant, shop) in 3 cities
-- **Target Tracking**: Monthly targets aggregated to annual for comparison
-- **Product Analysis**: Revenue distribution across beer, NAB (non-alcoholic), and soda
-- **Trend Analysis**: Monthly sales patterns for 2024
+```
+fact_orders[user_id]     → dim_users[user_id]     (Many-to-One)
+fact_orders[product_id]  → dim_items[item_id]     (Many-to-One)
+fact_orders[order_date]  → dim_calendar[date]     (Many-to-One)
+```
 
 ---
 
-## 🎨 Dashboard Design
+## 🛠️ Technologies Used
 
-The Power BI dashboard includes:
-
-### Main Visuals
-- 📊 **KPI Cards**: Revenue, Target, Achievement %, Avg Ticket
-- 📈 **Trend Chart**: Monthly revenue with target line
-- 🗺️ **Map**: Geographic revenue distribution
-- 📦 **Category Breakdown**: Product and customer segmentation
-- 📋 **Top Customers Table**: Ranking with targets and achievement
-
-### Interactive Features
-- Filters by date, city, customer category, product type
-- Drill-through for customer details
-- Cross-highlighting between visuals
-
----
-
-## 🛠️ Technical Stack
-
-| Component | Technology | Purpose |
-|-----------|------------|---------|
-| **Cloud Platform** | Databricks Community Edition | Data processing and storage |
-| **Processing Engine** | PySpark | Distributed data transformation |
-| **Storage Format** | Delta Lake | ACID-compliant data lake |
-| **Data Modeling** | Star Schema | Optimized for analytics |
-| **Visualization** | Power BI Desktop | Interactive dashboard |
-| **Version Control** | Git | Code versioning (recommended) |
+| Component | Technology |
+|-----------|------------|
+| **Cloud Platform** | Databricks Free Edition |
+| **Processing** | PySpark |
+| **Storage** | Delta Lake |
+| **Modeling** | Star Schema |
+| **Visualization** | Power BI Desktop |
+| **Version Control** | Git & GitHub |
 
 ---
 
 ## ✅ Solution Highlights
 
-### What Makes This Solution Production-Ready
-
-1. **Scalable Architecture**: Medallion pattern allows incremental improvements
-2. **Data Quality**: Built-in validations at each layer (Bronze → Silver → Gold)
-3. **Maintainability**: Modular notebooks, clear documentation, standard naming
-4. **Performance**: Delta Lake optimization, partitioning strategy ready
-5. **Best Practices**: 
-   - Separate raw/cleaned/modeled layers
-   - Single source of truth (merged targets)
-   - Star schema for fast queries
-   - Proper error handling
+| Aspect | Implementation |
+|--------|----------------|
+| **Architecture** | Medallion pattern (Bronze → Silver → Gold) |
+| **Data Quality** | Validation at each transformation layer |
+| **Scalability** | Delta Lake with partitioning capability |
+| **Performance** | Star schema optimized for BI queries |
+| **Maintainability** | Modular notebooks with clear documentation |
+| **Best Practices** | ACID transactions, schema evolution, audit columns |
 
 ---
 
-## 📞 Contact & Questions
+## 📊 Key Business Metrics
 
-For any questions about this solution:
-- **Candidate**: Rafael
-- **Delivery**: December 2025
-- **Repository**: [If using GitHub, add link here]
-
----
-
-## 📚 References
-
-- [Databricks Medallion Architecture](https://www.databricks.com/glossary/medallion-architecture)
-- [Kimball Star Schema Design](https://learn.microsoft.com/en-us/power-bi/guidance/star-schema)
-- [Delta Lake Documentation](https://docs.delta.io/)
-- [Power BI Best Practices](https://learn.microsoft.com/en-us/power-bi/)
+| Metric | Implementation |
+|--------|---------|
+| **Total Revenue** | Aggregation of all order revenues |
+| **Revenue Achievement** | Performance % against customer targets |
+| **Average Ticket** | Average revenue per transaction |
+| **Customer Segmentation** | Analysis by category (bar, restaurant, shop) |
+| **Geographic Analysis** | Performance by city |
+| **Trend Analysis** | Monthly revenue patterns and YTD comparison |
 
 ---
 
