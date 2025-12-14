@@ -1,58 +1,39 @@
-# Databricks notebook source
-# MAGIC %md
-# MAGIC # 🥉 Bronze Layer - Raw Data Ingestion
-# MAGIC 
-# MAGIC **Purpose**: Ingest raw tables from Databricks file upload into Bronze layer with minimal transformation.
-# MAGIC 
-# MAGIC **Input**: Raw tables created via Databricks UI data import
-# MAGIC - `raw_items`
-# MAGIC - `raw_orders`
-# MAGIC - `raw_targets`
-# MAGIC - `raw_users`
-# MAGIC 
-# MAGIC **Output**: Bronze Delta tables with ingestion timestamp
-# MAGIC - `bronze_raw_items`
-# MAGIC - `bronze_raw_orders`
-# MAGIC - `bronze_raw_targets`
-# MAGIC - `bronze_raw_users`
+from pyspark.sql.functions import current_timestamp, lit
+import pandas as pd
+import os
 
-# COMMAND ----------
+VOLUME_PATH = "/Volumes/abinbev/bronze/excel-files"
 
-from pyspark.sql.functions import current_timestamp
-
-print("📥 BRONZE LAYER - Table Ingestion")
+print("📂 BRONZE LAYER - Excel to Delta")
 print("=" * 60)
 
-source_tables = ["raw_items", "raw_orders", "raw_targets", "raw_users"]
+files = [f for f in os.listdir(VOLUME_PATH) if f.endswith('.xlsx')]
 
-for table_name in source_tables:
-    df = (
-        spark.table(f"abinbev.default.{table_name}")
+for filename in files:
+    table_name = os.path.splitext(filename)[0]
+    print(f"\n📥 Processing: {filename}")
+    
+    # Read Excel directly from volume path
+    pandas_df = pd.read_excel(f"{VOLUME_PATH}/{filename}", engine='openpyxl')
+    spark_df = spark.createDataFrame(pandas_df)
+    
+    # Clean column names
+    for col in spark_df.columns:
+        clean = col.strip().replace(" ", "_").lower()
+        if clean != col:
+            spark_df = spark_df.withColumnRenamed(col, clean)
+    
+    # Add audit columns
+    spark_df = (
+        spark_df
         .withColumn("ingestion_timestamp", current_timestamp())
+        .withColumn("source_file", lit(f"{VOLUME_PATH}/{filename}"))
     )
     
-    # Rename columns with invalid characters (e.g., spaces)
-    for col in df.columns:
-        new_col = col.replace(" ", "_")
-        if new_col != col:
-            df = df.withColumnRenamed(col, new_col)
+    # Save as Delta
+    spark_df.write.format("delta").mode("overwrite").saveAsTable(f"abinbev.bronze.{table_name}")
     
-    df.write.format("delta").mode("overwrite").saveAsTable(f"abinbev.default.bronze_{table_name}")
-    
-    record_count = df.count()
-    print(f"✅ bronze_{table_name:10} → {record_count:5} records")
+    print(f"✅ bronze_{table_name} → {spark_df.count()} records")
 
-print("=" * 60)
+print("\n" + "=" * 60)
 print("✅ BRONZE layer completed!")
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Validation
-# MAGIC 
-# MAGIC Verify that all Bronze tables were created successfully.
-
-# COMMAND ----------
-
-# Display sample from bronze_raw_orders
-display(spark.table("abinbev.default.bronze_raw_orders").limit(5))

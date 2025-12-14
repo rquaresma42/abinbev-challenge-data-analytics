@@ -15,10 +15,6 @@ ENV/
 # Databricks
 .databricks/
 
-# Power BI
-*.pbix
-*.pbit
-
 # Data files
 *.csv
 *.xlsx

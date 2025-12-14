@@ -1,43 +1,12 @@
-# Databricks notebook source
-# MAGIC %md
-# MAGIC # 🔍 Data Quality Validation
-# MAGIC 
-# MAGIC **Purpose**: Validate data quality and referential integrity of Gold layer tables.
-# MAGIC 
-# MAGIC **Validations**:
-# MAGIC - Referential integrity (FK existence)
-# MAGIC - Business rules (positive revenue, valid dates)
-# MAGIC - Data completeness
-# MAGIC - Exploratory analysis
-# MAGIC 
-# MAGIC **Input**: Gold tables
-# MAGIC **Output**: Validation report and insights
-
-# COMMAND ----------
-
 from pyspark.sql.functions import col, sum, count
 
 print("🔍 DATA QUALITY VALIDATION")
 print("=" * 60)
 
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Load Gold Tables
-
-# COMMAND ----------
-
 # === VALIDATE REFERENTIAL INTEGRITY ===
-fact = spark.table("abinbev.default.fact_orders")
-dim_users = spark.table("abinbev.default.dim_users")
-dim_items = spark.table("abinbev.default.dim_items")
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Referential Integrity Checks
-
-# COMMAND ----------
+fact = spark.table("abinbev.gold.fact_orders")
+dim_users = spark.table("abinbev.gold.dim_users")
+dim_items = spark.table("abinbev.gold.dim_items")
 
 # Check 1: Do all user_ids in fact exist in the dimension?
 orphan_users = fact.join(dim_users, "user_id", "left_anti").select("user_id").distinct()
@@ -53,13 +22,6 @@ orphan_items = fact.join(
 orphan_items_count = orphan_items.count()
 print(f"{'✅' if orphan_items_count == 0 else '❌'} Orphan items: {orphan_items_count}")
 
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Business Rules Validation
-
-# COMMAND ----------
-
 # Check 3: Is revenue always positive?
 negative_revenue = fact.filter(col("revenue") <= 0).count()
 print(f"{'✅' if negative_revenue == 0 else '❌'} Negative revenue: {negative_revenue}")
@@ -68,24 +30,10 @@ print(f"{'✅' if negative_revenue == 0 else '❌'} Negative revenue: {negative_
 invalid_dates = fact.filter(col("order_date").isNull()).count()
 print(f"{'✅' if invalid_dates == 0 else '❌'} Invalid dates: {invalid_dates}")
 
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Summary Statistics
-
-# COMMAND ----------
-
 print("\n📊 GOLD TABLES SUMMARY:")
 print(f"   fact_orders: {fact.count():,} records")
 print(f"   dim_users:   {dim_users.count():,} records")
 print(f"   dim_items:   {dim_items.count():,} records")
-
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Exploratory Analysis
-
-# COMMAND ----------
 
 # === QUICK EXPLORATORY ANALYSIS ===
 print("\n💰 TOP 5 CLIENTS BY REVENUE:")
@@ -104,8 +52,6 @@ display(
     .limit(5)
 )
 
-# COMMAND ----------
-
 print("\n📦 REVENUE BY PRODUCT CATEGORY:")
 display(
     fact.join(dim_items, fact.product_id == dim_items.item_id)
@@ -117,14 +63,5 @@ display(
     .orderBy(col("total_revenue").desc())
 )
 
-# COMMAND ----------
-
-# MAGIC %md
-# MAGIC ## Validation Complete
-
-# COMMAND ----------
-
 print("=" * 60)
 print("✅ Validation completed!")
-print("\n🎯 All data quality checks passed!")
-print("📊 Data is ready for Power BI consumption.")
